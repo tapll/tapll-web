@@ -1,0 +1,250 @@
+{
+  "$ref": "#/definitions/WebEventBatchV1",
+  "definitions": {
+    "WebEventBatchV1": {
+      "type": "object",
+      "properties": {
+        "contract_version": {
+          "type": "number",
+          "const": 1
+        },
+        "batch_id": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "environment": {
+          "type": "string",
+          "enum": [
+            "development",
+            "production"
+          ]
+        },
+        "privacy_mode": {
+          "type": "string",
+          "enum": [
+            "strict_anonymous",
+            "product_analytics"
+          ]
+        },
+        "sent_at": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "key": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 128
+        },
+        "device": {
+          "type": "object",
+          "properties": {
+            "os_name": {
+              "type": "string",
+              "const": "Web"
+            },
+            "sdk_version": {
+              "type": "string",
+              "maxLength": 32
+            },
+            "app_version": {
+              "type": "string",
+              "maxLength": 32
+            },
+            "locale": {
+              "type": "string",
+              "maxLength": 16
+            },
+            "timezone": {
+              "type": "string",
+              "maxLength": 64
+            },
+            "screen_width": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 100000
+            }
+          },
+          "required": [
+            "os_name",
+            "sdk_version",
+            "locale",
+            "timezone"
+          ],
+          "additionalProperties": false
+        },
+        "identity": {
+          "type": "object",
+          "properties": {
+            "install_id": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "user_id": {
+              "type": "string",
+              "maxLength": 128
+            },
+            "traits": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string",
+                "maxLength": 256
+              },
+              "propertyNames": {
+                "minLength": 1,
+                "maxLength": 40
+              },
+              "maxProperties": 8
+            }
+          },
+          "additionalProperties": false,
+          "default": {}
+        },
+        "events": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "event_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "session_id": {
+                "type": "string",
+                "format": "uuid"
+              },
+              "name": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                    "enum": [
+                      "$first_open",
+                      "$session_start",
+                      "$session_end",
+                      "$foreground",
+                      "$background",
+                      "$screen_view",
+                      "$app_install",
+                      "$app_update",
+                      "$deep_link",
+                      "$pageview",
+                      "$page_leave",
+                      "$outbound",
+                      "$download"
+                    ]
+                  },
+                  {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 64,
+                    "pattern": "^[a-z][a-z0-9_]*$"
+                  }
+                ]
+              },
+              "timestamp": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "screen": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 128
+              },
+              "properties": {
+                "type": "object",
+                "additionalProperties": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                      "maxLength": 256
+                    },
+                    {
+                      "type": "number"
+                    },
+                    {
+                      "type": "boolean"
+                    }
+                  ]
+                },
+                "propertyNames": {
+                  "minLength": 1,
+                  "maxLength": 64
+                }
+              },
+              "feature": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 64,
+                "pattern": "^[a-z][a-z0-9_]*$"
+              },
+              "role": {
+                "type": "string",
+                "enum": [
+                  "discovery",
+                  "start",
+                  "use",
+                  "success",
+                  "failure"
+                ]
+              },
+              "page": {
+                "type": "object",
+                "properties": {
+                  "hostname": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 253
+                  },
+                  "referrer": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 253
+                  },
+                  "utm_source": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 128
+                  },
+                  "utm_medium": {
+                    "$ref": "#/definitions/WebEventBatchV1/properties/events/items/properties/page/properties/utm_source"
+                  },
+                  "utm_campaign": {
+                    "$ref": "#/definitions/WebEventBatchV1/properties/events/items/properties/page/properties/utm_source"
+                  },
+                  "utm_term": {
+                    "$ref": "#/definitions/WebEventBatchV1/properties/events/items/properties/page/properties/utm_source"
+                  },
+                  "utm_content": {
+                    "$ref": "#/definitions/WebEventBatchV1/properties/events/items/properties/page/properties/utm_source"
+                  }
+                },
+                "required": [
+                  "hostname"
+                ],
+                "additionalProperties": false
+              }
+            },
+            "required": [
+              "event_id",
+              "name",
+              "timestamp"
+            ],
+            "additionalProperties": false
+          },
+          "minItems": 1,
+          "maxItems": 100
+        }
+      },
+      "required": [
+        "contract_version",
+        "batch_id",
+        "environment",
+        "privacy_mode",
+        "sent_at",
+        "device",
+        "events"
+      ],
+      "additionalProperties": false
+    }
+  },
+  "$schema": "http://json-schema.org/draft-07/schema#"
+}
