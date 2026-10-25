@@ -105,6 +105,7 @@ describe('consent.js', () => {
     const buttons = Array.from(host.shadowRoot.querySelectorAll('button')) as any[];
     expect(buttons.map((b) => b.textContent)).toEqual(['Decline', 'Accept']);
     expect(buttons[0].className).toBe(buttons[1].className);
+    expect(host.shadowRoot.querySelector('.h').textContent).toBe('Your privacy');
     expect(host.shadowRoot.querySelector('a').getAttribute('href')).toBe('https://example.com/privacy');
     buttons[1].click();
     expect(calls).toEqual([['consent', true]]);

@@ -42,12 +42,12 @@ describe('the built script works as shipped', () => {
     w.union('track', 'queued_before_load', { a: 1 });
     w.document.head.innerHTML = '<script data-key="av_dist" data-mode="strict_anonymous" data-version="7"></script>';
     (0, eval)(readFileSync(root + 'dist/u.js', 'utf8'));
-    expect(w.union.version).toBe('0.2.0');
+    expect(w.union.version).toBe('0.2.1');
     w.union.track('after_load');
     await w.union.flush();
     expect(env.fetched).toHaveLength(1);
     assertBatch(env.fetched[0]);
-    expect(env.fetched[0]).toMatchObject({ key: 'av_dist', privacy_mode: 'strict_anonymous', device: { app_version: '7', sdk_version: '0.2.0' } });
+    expect(env.fetched[0]).toMatchObject({ key: 'av_dist', privacy_mode: 'strict_anonymous', device: { app_version: '7', sdk_version: '0.2.1' } });
     expect(env.fetched[0].events.map((e: any) => e.name)).toEqual(['$pageview', 'queued_before_load', 'after_load']);
     expect(env.fetched[0].events[0].page.utm_source).toBe('n');
     // loading the same file again is harmless

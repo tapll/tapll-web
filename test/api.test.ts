@@ -202,7 +202,7 @@ describe('command queue stub (window.union.q)', () => {
     await w.union.flush();
     expect(env().events().map((e) => e.name + '@' + e.screen)).toEqual(['$pageview@/app', 'early_one@/app', 'early_two@/app', '$page_leave@/app', '$pageview@/virtual', 'late_one@/app']);
     expect(env().events('early_two')[0]).toMatchObject({ feature: 'onboarding', role: 'start' });
-    expect(w.union.version).toBe('0.2.0');
+    expect(w.union.version).toBe('0.2.1');
   });
 
   it('command style keeps working after load: union("track", ...) and union("feature", key)', async () => {

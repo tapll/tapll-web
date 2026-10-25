@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.2.1
+
+- Consent banner redesign: a compact card (bottom-left; a full-width sheet on phones) with a heading, muted body text, two equal neutral buttons, hairline border, dark mode and a short entrance animation (off with `prefers-reduced-motion`). New `data-consent-title` (default "Your privacy"). Behaviour unchanged.
+
 ## 0.2.0
 
 - **Consent** (`data-consent`). `required`: nothing is stored and nothing is sent until `union.consent(true)` — events wait in memory (max 100) and leave on accept, with the landing page's referrer and UTMs; `union.consent(false)` is `optOut()`. `banner`: the same, plus Union's own banner (`consent.js`, ~1.1 KB, loaded next to `u.js` only while the answer is pending): Accept and Decline with equal weight, text and policy link from `data-consent-text`, `data-consent-accept`, `data-consent-decline`, `data-consent-policy`. The answer is remembered (`union:consent` / `union:optout`).

@@ -21,7 +21,7 @@ That is the whole install: page views (including SPA navigation), time on page a
 | `data-auto` | on | `data-auto="false"` turns off `$outbound` / `$download` capture. Tagged elements (`data-union-event`) keep working. |
 | `data-spa` | on | `data-spa="false"` stops patching `history.pushState/replaceState` and ignores `popstate`. |
 | `data-consent` | none | `banner`: show Union's consent banner and collect only after **Accept**. `required`: collect only after your consent tool calls `union.consent(true)`. See [Consent](#consent). |
-| `data-consent-text`, `-accept`, `-decline`, `-policy` | English defaults | The banner's sentence, button labels and privacy-policy URL. |
+| `data-consent-title`, `-text`, `-accept`, `-decline`, `-policy` | English defaults | The banner's heading, sentence, button labels and privacy-policy URL. |
 
 ## What is recorded automatically
 
