@@ -1,4 +1,4 @@
-import { createApi } from './api';
+import { createApi, loadBanner } from './api';
 import { readConfig } from './config';
 import { warn } from './validation';
 
@@ -13,6 +13,8 @@ export function boot(script: Element | null): void {
     (window as any).union = api;
     // Calls made through the `union.q` stub before this script loaded, in order.
     for (const a of (prev && prev.q) || []) api(...(Array.prototype.slice.call(a) as [string]));
+    // After the queue: a `union('consent', true)` made by the site's CMP before load is already applied.
+    if (cfg.consent === 'banner' && api.consentStatus() === 'pending') loadBanner(cfg);
   } catch (e) {
     warn('failed to start: ' + e);
   }

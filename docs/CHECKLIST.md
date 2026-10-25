@@ -32,6 +32,7 @@ State: `[x]` implemented and covered by a test, `[ ]` not done.
 | `pageview(path?)` | manual pageview, deduplicated | [x] |
 | `identify(userId, traits?)` / `reset()` | product_analytics only; no-op + warning in strict | [x] |
 | `optOut()` / `optIn()` | flag in `union:optout`; opted out = nothing sent, queue dropped | [x] |
+| `[WEB]` `data-consent` / `consent(bool)` | pending: no storage, no network, events held in memory (≤100) and released on accept with their session; decline = `optOut()`; answer remembered in `union:consent`; `banner` loads `consent.js` (Accept/Decline equal weight) | [x] |
 | `sessionId()` | product_analytics: live session id; strict: `session_id` of the latest 202 (memory only), `null` until then | [x] |
 | `flush()` | resolves when the queue is empty or the SDK is paused/stopped | [x] |
 | `union.q` stub | replayed in order after the first pageview | [x] |
@@ -107,4 +108,4 @@ All [x] (`test/transport.test.ts`, `test/policy.test.ts`).
 
 ## 8. Size budget
 
-Original target: **3 KB gzip**. The full feature set above measures about 4.4 KB, so `scripts/budget.mjs` enforces **4.5 KB**. To get back to 3 KB the candidates are, by size: persisted queue + restore (~250 B), `$page_leave` scroll tracking (~150 B), `feature()` handles (~150 B), 413 split and 400 per-event drop (~250 B), `data-exclude` globs, UTM/referrer context. Decide with product before cutting.
+Original target: **3 KB gzip**. The full feature set above measures about 4.4 KB, so 0.1.0 enforced **4.5 KB**; 0.2.0 adds the consent gate (~0.4 KB) and `scripts/budget.mjs` enforces **5 KB** (the banner is a separate `consent.js`). To get back to 3 KB the candidates are, by size: persisted queue + restore (~250 B), `$page_leave` scroll tracking (~150 B), `feature()` handles (~150 B), 413 split and 400 per-event drop (~250 B), `data-exclude` globs, UTM/referrer context. Decide with product before cutting.

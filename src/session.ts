@@ -1,7 +1,7 @@
 import { UUID_RE, uuid } from './uuid';
 
 /** Storage keys. strict_anonymous touches none of them except `union:optout`, and only after optOut() was called. */
-export const K = { id: 'union:id', session: 'union:session', user: 'union:user', queue: 'union:queue', optout: 'union:optout' };
+export const K = { id: 'union:id', session: 'union:session', user: 'union:user', queue: 'union:queue', optout: 'union:optout', consent: 'union:consent' };
 
 type Op = 'getItem' | 'setItem' | 'removeItem';
 /** localStorage that never throws (private mode, blocked storage, quota). */

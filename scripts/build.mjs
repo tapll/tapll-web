@@ -28,3 +28,8 @@ const res = await minify(code, {
 writeFileSync('dist/u.js', res.code);
 writeFileSync('dist/u.js.map', res.map);
 copyFileSync('src/u.d.ts', 'dist/u.d.ts');
+
+// The banner is its own file, loaded by u.js only when a site asks for it (`data-consent="banner"`).
+const banner = await build({ entryPoints: ['src/consent.ts'], bundle: true, format: 'iife', target: 'es2017', minifySyntax: true, write: false, legalComments: 'none' });
+const bannerMin = await minify(banner.outputFiles[0].text, { ecma: 2017, compress: { passes: 2 }, mangle: { toplevel: true }, format: { comments: false } });
+writeFileSync('dist/consent.js', bannerMin.code);

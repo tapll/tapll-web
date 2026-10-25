@@ -18,12 +18,27 @@ export interface Union {
   optIn(): void;
   sessionId(): string | null;
   flush(): Promise<void>;
+  consent(granted: boolean): void;
+  consentStatus(): 'granted' | 'denied' | 'pending' | 'not_required';
+  showConsent(): void;
 }
 
 /**
  * Builds the public `union` function/object for one config and starts auto-capture.
  * Every method goes through the one dispatcher below, so nothing ever throws into the page.
  */
+/** Loads `consent.js` from next to `u.js` once; it renders the banner and answers through `union.consent`. */
+export function loadBanner(cfg: Config): void {
+  const w = window as any;
+  if (w.__unionConsent) return w.__unionConsent();
+  if (!cfg.base || document.querySelector('script[data-union-consent]')) return;
+  const s = document.createElement('script');
+  s.src = cfg.base + 'consent.js';
+  s.async = true;
+  s.setAttribute('data-union-consent', '');
+  document.head.appendChild(s);
+}
+
 export function createApi(cfg: Config) {
   const core = createCore(cfg);
   const pa = cfg.mode === 'product_analytics';
@@ -58,6 +73,10 @@ export function createApi(cfg: Config) {
     /** product_analytics: current session id. strict_anonymous: null (the server assigns the session). */
     sessionId: () => core.sessionId(),
     flush: () => core.tx.flush(),
+    consent: (granted: unknown) => core.consent(granted === true),
+    consentStatus: () => core.consentStatus(),
+    /** Re-opens Union's banner — for a "Privacy choices" link in the footer. */
+    showConsent: () => loadBanner(cfg),
   };
 
   const api: any = (cmd: string, ...a: unknown[]) => {

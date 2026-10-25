@@ -11,6 +11,13 @@ export function createCore(cfg: Config) {
   const st = pa ? createState() : null;
   let opted = store.get(K.optout) === '1';
   let serverSession: string | null = null; // strict_anonymous: assigned by the server, memory only
+  // Consent mode: until the visitor accepts, nothing is stored and nothing is sent. Events wait here,
+  // in memory only, and leave on `consent(true)`; a decline drops them. The choice itself is the one
+  // thing written, and only once the visitor made it.
+  let pending = cfg.consent !== 'none' && !opted && store.get(K.consent) !== 'granted';
+  let held: WebEvent[] = [];
+  let heldUser: User | null | undefined;
+  const HELD_MAX = 100;
 
   const tx = createTransport({
     url: cfg.url,
@@ -27,7 +34,17 @@ export function createCore(cfg: Config) {
       return { contract_version: 1, batch_id, environment: cfg.env, privacy_mode: cfg.mode, sent_at: Date.now(), key: cfg.key, device, identity, events };
     },
   });
-  if (!opted) tx.restore();
+  if (!opted && !pending) tx.restore();
+  function optOut(): void {
+    opted = true;
+    pending = false;
+    held = [];
+    store.set(K.optout, '1');
+    store.del(K.consent);
+    tx.clear();
+    if (pa) store.del(K.queue);
+  }
+  const send = (e: WebEvent) => ((e.session_id = st ? st.touch() : undefined), tx.push(e));
 
   return {
     cfg,
@@ -38,7 +55,6 @@ export function createCore(cfg: Config) {
       if (opted || tx.stopped || cfg.exclude.some((r) => r.test(path))) return;
       const e: WebEvent = {
         event_id: uuid(7),
-        session_id: st ? st.touch() : undefined,
         name,
         timestamp: Date.now(),
         screen: path[0] === '/' && path.length <= PATH_MAX ? path : undefined,
@@ -47,24 +63,36 @@ export function createCore(cfg: Config) {
         role: o.role,
         page: o.page,
       };
-      tx.push(e);
+      if (pending) held.length < HELD_MAX && held.push(e);
+      else send(e);
     },
-    identify: (u: User): void => st!.setUser(u),
+    identify: (u: User): void => (pending ? void (heldUser = u) : st!.setUser(u)),
     reset(): void {
       st!.setUser(null);
       st!.rotate();
     },
     sessionId: (): string | null => (st ? st.touch() : serverSession),
-    optOut(): void {
-      opted = true;
-      store.set(K.optout, '1');
-      tx.clear();
-      if (pa) store.del(K.queue);
-    },
+    optOut,
     optIn(): void {
       opted = false;
       store.del(K.optout);
     },
+    /** The visitor's answer. Accept releases what waited; decline is `optOut()`. Both are remembered. */
+    consent(granted: boolean): void {
+      if (!granted) return optOut();
+      store.set(K.consent, 'granted');
+      store.del(K.optout);
+      const wasPending = pending;
+      opted = pending = false;
+      if (!wasPending) return;
+      tx.restore();
+      if (heldUser !== undefined && st) st.setUser(heldUser);
+      const out = held;
+      held = [];
+      out.forEach(send);
+    },
+    consentStatus: (): 'granted' | 'denied' | 'pending' | 'not_required' =>
+      opted ? 'denied' : pending ? 'pending' : cfg.consent === 'none' ? 'not_required' : 'granted',
   };
 }
 

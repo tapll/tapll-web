@@ -20,6 +20,8 @@ That is the whole install: page views (including SPA navigation), time on page a
 | `data-env` | auto | Force `development` or `production`. Auto: `development` on `localhost`, `127.*`, `*.local`; otherwise `production`. |
 | `data-auto` | on | `data-auto="false"` turns off `$outbound` / `$download` capture. Tagged elements (`data-union-event`) keep working. |
 | `data-spa` | on | `data-spa="false"` stops patching `history.pushState/replaceState` and ignores `popstate`. |
+| `data-consent` | none | `banner`: show Union's consent banner and collect only after **Accept**. `required`: collect only after your consent tool calls `union.consent(true)`. See [Consent](#consent). |
+| `data-consent-text`, `-accept`, `-decline`, `-policy` | English defaults | The banner's sentence, button labels and privacy-policy URL. |
 
 ## What is recorded automatically
 
@@ -97,8 +99,27 @@ Uses `localStorage`; the site decides whether that needs consent, the SDK does n
 | `union:user` | identified user `{ id, traits? }` |
 | `union:queue` | unsent events (max 200, oldest evicted) replayed on the next page load |
 | `union:optout` | opt-out flag |
+| `union:consent` | `granted` once the visitor accepted (`data-consent`) |
 
 Every event carries `session_id`; the batch identity is `{ install_id, user_id?, traits? }`.
+
+## Consent
+
+For `product_analytics` in the EU (it stores an id in the browser), let the visitor decide first:
+
+```html
+<script defer src="https://cdn.useunion.dev/v0/u.js" data-key="av_xxx"
+        data-mode="product_analytics" data-consent="banner"
+        data-consent-policy="https://example.com/privacy"></script>
+```
+
+- Until the visitor answers, **nothing is stored and nothing is sent**. Page views and events wait in memory (at most 100) and are sent on **Accept** — the landing page keeps its referrer and UTMs.
+- **Decline** calls `union.optOut()`: the waiting events are dropped and nothing is collected on later visits.
+- The answer is remembered (`union:consent` or `union:optout`), so the banner shows once. Put `<a href="#" onclick="union.showConsent()">Privacy choices</a>` in the footer to let people change their mind.
+- Accept and Decline have equal weight by design. The banner is `consent.js`, loaded from next to `u.js` only while an answer is pending; sites without `data-consent` never download it.
+- Already have a consent tool (Cookiebot, OneTrust, Klaro)? Use `data-consent="required"` and call `union.consent(true)` / `union.consent(false)` from its callbacks — or `union('consent', true)` before the script has loaded.
+
+`strict_anonymous` stores nothing and needs no banner; `data-consent` works there too if your policy asks for it (the only thing then written is the answer).
 
 ## Delivery
 

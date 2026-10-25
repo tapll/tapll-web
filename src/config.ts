@@ -24,5 +24,7 @@ export function readConfig(el: Element | null, hostname: string): Config | null 
     env: env === 'development' || env === 'production' ? env : /^(localhost$|127\.)|\.local$/i.test(hostname) ? 'development' : 'production',
     auto: a('auto') !== 'false',
     spa: a('spa') !== 'false',
+    consent: a('consent') === 'banner' ? 'banner' : a('consent') === 'required' ? 'required' : 'none',
+    base: ((el && (el as HTMLScriptElement).src) || '').replace(/[^/]*$/, ''),
   };
 }

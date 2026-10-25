@@ -26,6 +26,11 @@ export interface Union {
   /** product_analytics: current session id. strict_anonymous: the server-assigned session id from the latest 202 (memory only), null until then. */
   sessionId(): string | null;
   flush(): Promise<void>;
+  /** The visitor's answer (`data-consent`): `true` releases what waited in memory, `false` is `optOut()`. Remembered. */
+  consent(granted: boolean): void;
+  consentStatus(): 'granted' | 'denied' | 'pending' | 'not_required';
+  /** Re-opens Union's own banner (`data-consent="banner"`), e.g. from a "Privacy choices" footer link. */
+  showConsent(): void;
 }
 
 declare global {

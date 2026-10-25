@@ -18,7 +18,7 @@ const out = 'cdn/public';
 rmSync(out, { recursive: true, force: true });
 for (const dir of [major, `v${version}`]) {
   mkdirSync(`${out}/${dir}`, { recursive: true });
-  for (const file of ['u.js', 'u.js.map', 'u.d.ts']) copyFileSync(`dist/${file}`, `${out}/${dir}/${file}`);
+  for (const file of ['u.js', 'u.js.map', 'u.d.ts', 'consent.js']) copyFileSync(`dist/${file}`, `${out}/${dir}/${file}`);
 }
 
 const integrity = `sha384-${createHash('sha384').update(readFileSync('dist/u.js')).digest('base64')}`;
