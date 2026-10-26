@@ -43,6 +43,7 @@ function read<T>(k: string, ok: (v: any) => boolean): T | null {
 export function createState(now: () => number = Date.now) {
   let cur: { id: string; startedAt: number; lastActivityAt: number } | null = null;
   let id: string | null = null;
+  let minted = false;
   let user: User | null | undefined;
   const save = (s: typeof cur) => (store.set(K.session, JSON.stringify((cur = s))), s!.id);
   const fresh = () => save({ id: uuid(7, now()), startedAt: now(), lastActivityAt: now() });
@@ -56,9 +57,20 @@ export function createState(now: () => number = Date.now) {
     installId(): string {
       if (!id) {
         id = store.get(K.id);
-        if (!id || !UUID_RE.test(id)) store.set(K.id, (id = uuid(4)));
+        if (!id || !UUID_RE.test(id)) {
+          store.set(K.id, (id = uuid(4)));
+          // Only an id the browser kept is a first visit: with storage blocked every load mints one.
+          minted = store.get(K.id) === id;
+        }
       }
       return id;
+    },
+    /** True once, on the load that minted the stored id: the visitor's first visit in this browser. */
+    takeFirstVisit(): boolean {
+      this.installId();
+      const m = minted;
+      minted = false;
+      return m;
     },
     user: (): User | null => (user === undefined ? (user = read<User>(K.user, (v) => typeof v.id == 'string')) : user),
     setUser(u: User | null): void {

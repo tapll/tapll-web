@@ -16,7 +16,8 @@ State: `[x]` implemented and covered by a test, `[ ]` not done.
 | `$download` | click on a link whose path ends in pdf, zip, dmg, exe, csv, xlsx, docx, pptx, mp4, mp3, pkg, apk, ipa (any host) | `file_ext` (lowercase) | [x] |
 | tagged | click inside `[data-union-event]` | name from the attribute; `feature`/`role` from `data-union-feature`/`data-union-role` | [x] |
 
-- [WEB] No `$first_open`, `$app_install`, `$app_update`, `$session_start/end`, `$foreground/$background`, `$screen_view`, `$deep_link`: the contract refuses them on `/v1/web`. Sessions are the server's in strict mode.
+- [WEB] `$first_open` (`product_analytics` only): once, on the page load that minted `union:id` and only if storage kept it; in the session of the event that revealed it, ahead of it; after consent. iOS sends it on the first launch after install.
+- [WEB] No `$app_install`, `$app_update`, `$session_start/end`, `$foreground/$background`, `$screen_view`, `$deep_link`: the contract refuses them on `/v1/web`. Sessions are the server's in strict mode.
 - [WEB] `$pageview`/`$page_leave` replace `$screen_view`/`$background`; the path is the screen.
 - [WEB] `page` (hostname, referrer, utm) exists on `$pageview` only. Referrer is a host, never a URL; same-site (including `www.`) referrers are omitted. UTM values over 128 chars are omitted, not truncated.
 - [WEB] Paths: `location.pathname`; query and hash are never sent; a path over 128 chars is skipped with a warning (no event).

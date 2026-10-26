@@ -86,6 +86,48 @@ describe('createState (session rules, same as SessionManager.swift)', () => {
   });
 });
 
+describe('first visit ($first_open)', () => {
+  it('is sent once, on the load that minted the stored id, in the session of the event that revealed it', async () => {
+    const { api } = start(pa);
+    api.track('a');
+    await api.flush();
+    const [first, ...rest] = env().events();
+    expect(first.name).toBe('$first_open');
+    expect(first.session_id).toBe(rest[0].session_id);
+    expect(env().events('$first_open')).toHaveLength(1);
+    // A reload of the same browser is not a first visit.
+    const again = createApi(config(pa));
+    again.api.track('b');
+    await again.api.flush();
+    expect(env().events('$first_open')).toHaveLength(1);
+  });
+
+  it('is never sent when storage did not keep the id (every load would mint one)', async () => {
+    vi.stubGlobal('localStorage', { getItem: () => null, setItem: () => undefined, removeItem: () => undefined });
+    const { api } = start(pa);
+    api.track('a');
+    await api.flush();
+    expect(env().events('$first_open')).toEqual([]);
+  });
+
+  it('is never sent in strict_anonymous, which keeps no id', async () => {
+    const { api } = start();
+    api.track('a');
+    await api.flush();
+    expect(env().events('$first_open')).toEqual([]);
+  });
+
+  it('waits for consent like every other event', async () => {
+    const { api } = start({ ...pa, consent: 'required' });
+    api.track('a');
+    await api.flush();
+    expect(env().fetched).toEqual([]);
+    api.consent(true);
+    await api.flush();
+    expect(env().events().map((e) => e.name).slice(0, 2)).toEqual(['$first_open', '$pageview']);
+  });
+});
+
 describe('product_analytics through the API', () => {
   it('every event carries session_id; install_id in identity', async () => {
     const { api } = start(pa);

@@ -44,7 +44,7 @@ describe('request shape', () => {
     const b = env().fetched[0];
     expect(b).toMatchObject({ contract_version: 1, environment: 'production', privacy_mode: 'strict_anonymous', identity: {} });
     expect(b.sent_at).toBe(Date.now());
-    expect(b.device).toMatchObject({ os_name: 'Web', sdk_version: '0.2.1', app_version: '2026.10.1', screen_width: 1280 });
+    expect(b.device).toMatchObject({ os_name: 'Web', sdk_version: '0.3.0', app_version: '2026.10.1', screen_width: 1280 });
     expect(typeof b.device.locale).toBe('string');
     expect(b.device.timezone).toBeTypeOf('string');
     expect(b.batch_id).toMatch(/^[0-9a-f-]{36}$/);
@@ -413,6 +413,7 @@ describe('persisted queue (product_analytics)', () => {
     env().win.localStorage.setItem('union:queue', '{not json');
     const { api } = start(pa);
     await api.flush();
-    expect(env().fetched[0].events[0].name).toBe('$pageview');
+    // A fresh browser: the first visit, then the page view; nothing from the corrupt queue.
+    expect(env().fetched[0].events.map((e: any) => e.name)).toEqual(['$first_open', '$pageview']);
   });
 });

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.3.0
+
+- **First visit** (`product_analytics`): the page load that mints `union:id` sends `$first_open` once, in the session of the event that revealed it, so Union can start retention cohorts for websites. Never sent when the browser did not keep the id (blocked storage would make every load a first visit), never in `strict_anonymous`, and only after consent when `data-consent` is set. Visitors who already have an id are not counted as new.
+
 ## 0.2.1
 
 - Consent banner redesign: a compact card (bottom-left; a full-width sheet on phones) with a heading, muted body text, two equal neutral buttons, hairline border, dark mode and a short entrance animation (off with `prefers-reduced-motion`). New `data-consent-title` (default "Your privacy"). Behaviour unchanged.

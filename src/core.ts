@@ -44,7 +44,13 @@ export function createCore(cfg: Config) {
     tx.clear();
     if (pa) store.del(K.queue);
   }
-  const send = (e: WebEvent) => ((e.session_id = st ? st.touch() : undefined), tx.push(e));
+  const send = (e: WebEvent): void => {
+    e.session_id = st ? st.touch() : undefined;
+    // The web's first open (the server starts retention cohorts from it), ahead of the event that
+    // revealed it and in its session. After consent, since `send` never runs while it is pending.
+    if (st && st.takeFirstVisit()) tx.push({ event_id: uuid(7), name: '$first_open', timestamp: e.timestamp, session_id: e.session_id });
+    tx.push(e);
+  };
 
   return {
     cfg,

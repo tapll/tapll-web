@@ -94,7 +94,7 @@ Uses `localStorage`; the site decides whether that needs consent, the SDK does n
 
 | Key | Content |
 |---|---|
-| `union:id` | `install_id` (UUID) |
+| `union:id` | `install_id` (UUID). The page load that creates it sends `$first_open` once: the visitor's first visit in this browser, where retention cohorts start |
 | `union:session` | `{ id, startedAt, lastActivityAt }`; a new session starts after more than 30 minutes of inactivity (same rule as the server and the mobile SDKs) |
 | `union:user` | identified user `{ id, traits? }` |
 | `union:queue` | unsent events (max 200, oldest evicted) replayed on the next page load |
