@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.4.0
+
+- **Automation flag**: when `navigator.webdriver` is true (Puppeteer, Playwright, Selenium…), every batch carries `device.automation: true`. Union keeps such visits and marks them as bots — listed in Sessions, never counted in any metric — whatever User-Agent the automation claims. Nothing is sent for a regular browser.
+
 ## 0.3.0
 
 - **First visit** (`product_analytics`): the page load that mints `union:id` sends `$first_open` once, in the session of the event that revealed it, so Union can start retention cohorts for websites. Never sent when the browser did not keep the id (blocked storage would make every load a first visit), never in `strict_anonymous`, and only after consent when `data-consent` is set. Visitors who already have an id are not counted as new.

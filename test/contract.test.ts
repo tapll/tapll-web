@@ -47,6 +47,21 @@ describe('every batch conforms to web-batch.v1.json', () => {
     expect(env().fetched[0].identity).toMatchObject({ user_id: 'user_1', traits: { name: 'Ada', plan: 'pro' } });
   });
 
+  it('automation: flagged only when navigator.webdriver is true, never sent as false', async () => {
+    const plain = start({});
+    plain.api.track('x');
+    await plain.api.flush();
+    expect('automation' in env().fetched[0].device).toBe(false);
+
+    Object.defineProperty(env().win.navigator, 'webdriver', { value: true, configurable: true });
+    const driven = start({});
+    driven.api.track('y');
+    await driven.api.flush();
+    const last = env().fetched.at(-1);
+    assertBatch(last);
+    expect(last.device.automation).toBe(true);
+  });
+
   it('event order is chronological and ids are unique', async () => {
     const batches = await everything({});
     const evs = batches.flatMap((b) => b.events);

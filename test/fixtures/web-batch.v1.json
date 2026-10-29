@@ -62,6 +62,10 @@
               "type": "integer",
               "minimum": 0,
               "maximum": 100000
+            },
+            "automation": {
+              "type": "boolean",
+              "const": true
             }
           },
           "required": [
@@ -116,6 +120,10 @@
                 "anyOf": [
                   {
                     "type": "string",
+                    "const": "$pageview"
+                  },
+                  {
+                    "type": "string",
                     "enum": [
                       "$first_open",
                       "$session_start",
@@ -126,7 +134,6 @@
                       "$app_install",
                       "$app_update",
                       "$deep_link",
-                      "$pageview",
                       "$page_leave",
                       "$outbound",
                       "$download"

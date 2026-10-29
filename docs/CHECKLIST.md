@@ -51,7 +51,7 @@ Event name / feature key `^[a-z][a-z0-9_]*$` max 64 and no `$` prefix; role in t
 
 `{contract_version:1, batch_id (v4), environment, privacy_mode, sent_at, key, device, identity, events}`. [x]
 
-- [WEB] `device` = `{os_name:'Web', sdk_version, app_version? (data-version), locale (navigator.language), timezone (Intl), screen_width}`. No `app_build`, `device_model`, `os_version` (the server reads them from the User-Agent).
+- [WEB] `device` = `{os_name:'Web', sdk_version, app_version? (data-version), locale (navigator.language), timezone (Intl), screen_width, automation?}`. No `app_build`, `device_model`, `os_version` (the server reads them from the User-Agent). `automation: true` only when `navigator.webdriver === true` (never `false`); the server keeps the visit and marks it a bot (≥ 0.4.0).
 - [WEB] `environment` is `development | production` (localhost, `127.*`, `*.local`, or `data-env`); there is no `testflight`.
 - [WEB] `key` is in the body (and only there): `sendBeacon` cannot set headers and `text/plain` keeps the request CORS-simple.
 - Absent keys are omitted, never `null`.

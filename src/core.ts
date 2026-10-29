@@ -28,6 +28,8 @@ export function createCore(cfg: Config) {
     build(events, batch_id) {
       const device: Record<string, unknown> = { os_name: 'Web', sdk_version: VERSION, app_version: cfg.version, locale: (navigator.language || 'en').slice(0, 16), screen_width: Math.round(innerWidth) };
       device.timezone = (Intl.DateTimeFormat().resolvedOptions().timeZone || '').slice(0, 64);
+      // Puppeteer, Playwright and Selenium set it whatever User-Agent they claim; the server marks the visit a bot.
+      if (navigator.webdriver === true) device.automation = true;
       const u = st && st.user();
       // JSON.stringify omits undefined, so absent keys are never sent (never null).
       const identity = st ? { install_id: st.installId(), user_id: u ? u.id : undefined, traits: u ? u.traits : undefined } : {};

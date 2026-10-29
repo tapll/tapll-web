@@ -1,6 +1,6 @@
 {
   "name": "union-web",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "private": true,
   "description": "Union browser analytics SDK (u.js)",
   "license": "MIT",

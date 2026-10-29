@@ -73,6 +73,8 @@ const GLOBALS = ['window', 'document', 'location', 'history', 'navigator', 'loca
 /** A fresh happy-dom window per test, installed as the globals the SDK reads, with fetch/sendBeacon captured and schema-checked. */
 export function setupEnv(url = 'https://example.com/', opts: { referrer?: string } = {}): Env {
   const win = new Window({ url, width: 1280, height: 800 });
+  // happy-dom reports itself as automation; a test page is a person's browser unless a test says otherwise.
+  Object.defineProperty(win.navigator, 'webdriver', { value: false, configurable: true });
   const w = win as any;
   w.window = win;
   if (opts.referrer !== undefined) Object.defineProperty(win.document, 'referrer', { value: opts.referrer, configurable: true });
