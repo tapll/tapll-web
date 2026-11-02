@@ -1,8 +1,8 @@
 {
-  "name": "union-web",
-  "version": "0.4.0",
+  "name": "tapll-web",
+  "version": "0.5.0",
   "private": true,
-  "description": "Union browser analytics SDK (u.js)",
+  "description": "Tapll browser analytics SDK (u.js)",
   "license": "MIT",
   "type": "module",
   "scripts": {

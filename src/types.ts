@@ -38,8 +38,8 @@ export interface Config {
   auto: boolean;
   spa: boolean;
   /**
-   * `none`: collect from load. `required`: hold everything in memory until `union.consent(true)` (the
-   * site's own consent tool calls it). `banner`: the same, and show Union's own banner (`consent.js`).
+   * `none`: collect from load. `required`: hold everything in memory until `tapll.consent(true)` (the
+   * site's own consent tool calls it). `banner`: the same, and show Tapll's own banner (`consent.js`).
    */
   consent: 'none' | 'required' | 'banner';
   /** Where `consent.js` lives: next to `u.js`. */

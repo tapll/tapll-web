@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.5.0
+
+- **Rename Union -> Tapll.** Package `tapll-web`; CDN `cdn.tapll.com`, ingest `in.tapll.com` (default `data-api`); global `window.tapll`; log prefix `[tapll]`; banner element `tapll-consent`; tagged clicks `data-tapll-event` / `-feature` / `-role`; storage keys `tapll:*`; typings `Tapll` (`Union` kept as a deprecated type alias).
+- **Alias**: `window.union` is the same object as `window.tapll`, so existing `union.track(...)` / `union('track', ...)` calls keep working. The script drains both a `tapll.q` and an old-snippet `union.q` queue. `data-union-*` attributes are still read as a fallback. Pages loading `cdn.useunion.dev` scripts are unaffected.
+- **Storage migration**: on load `union:id`, `union:session`, `union:user`, `union:queue`, `union:optout`, `union:consent` are moved to `tapll:*` once (new wins if both exist, old removed). A migrated visitor keeps the id and sends no new `$first_open`; opt-out and consent are honoured and a pending queue is still sent. `strict_anonymous` migrates only `optout` (and `consent` with `data-consent`); with consent pending, the rest moves on accept.
+- Size budget raised from 5 KB to 5.25 KB gzip for the fallbacks.
+- Docs: Stripe/Paddle attribution metadata keys are `tapll_session_id` / `tapll_user_id` (the server accepts the old `union_*` too); proxy country header `x-tapll-country`.
+
 ## 0.4.0
 
 - **Automation flag**: when `navigator.webdriver` is true (Puppeteer, Playwright, Selenium…), every batch carries `device.automation: true`. Union keeps such visits and marks them as bots — listed in Sessions, never counted in any metric — whatever User-Agent the automation claims. Nothing is sent for a regular browser.

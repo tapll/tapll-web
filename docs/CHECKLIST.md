@@ -1,4 +1,4 @@
-# union-web — implementation checklist
+# tapll-web — implementation checklist
 
 One place that says **what the SDK sends, when and in what shape**. Before adding an event or a context field: find it here; if it is missing, add a row first, then implement.
 
@@ -10,13 +10,13 @@ State: `[x]` implemented and covered by a test, `[ ]` not done.
 
 | Event | When | Properties / fields | State |
 |---|---|---|---|
-| `$pageview` | script load; SPA navigation to a new path (`pushState`, `replaceState`, `popstate`); `union.pageview(path?)` | `screen` = path. `page.hostname` always; first pageview of the page load only: `page.referrer` (external host), `page.utm_*` | [x] |
+| `$pageview` | script load; SPA navigation to a new path (`pushState`, `replaceState`, `popstate`); `tapll.pageview(path?)` | `screen` = path. `page.hostname` always; first pageview of the page load only: `page.referrer` (external host), `page.utm_*` | [x] |
 | `$page_leave` | `visibilitychange -> hidden`, `pagehide`, and before an SPA navigation (for the previous path) | `screen` = path left; `engaged_ms`, `scroll_pct` (0-100 integer, deepest scroll) | [x] |
 | `$outbound` | click on a link (`http/https`) to another host (`www.` ignored) | `url_host` | [x] |
 | `$download` | click on a link whose path ends in pdf, zip, dmg, exe, csv, xlsx, docx, pptx, mp4, mp3, pkg, apk, ipa (any host) | `file_ext` (lowercase) | [x] |
-| tagged | click inside `[data-union-event]` | name from the attribute; `feature`/`role` from `data-union-feature`/`data-union-role` | [x] |
+| tagged | click inside `[data-tapll-event]` | name from the attribute; `feature`/`role` from `data-tapll-feature`/`data-tapll-role` | [x] |
 
-- [WEB] `$first_open` (`product_analytics` only): once, on the page load that minted `union:id` and only if storage kept it; in the session of the event that revealed it, ahead of it; after consent. iOS sends it on the first launch after install.
+- [WEB] `$first_open` (`product_analytics` only): once, on the page load that minted `tapll:id` and only if storage kept it; in the session of the event that revealed it, ahead of it; after consent. iOS sends it on the first launch after install.
 - [WEB] No `$app_install`, `$app_update`, `$session_start/end`, `$foreground/$background`, `$screen_view`, `$deep_link`: the contract refuses them on `/v1/web`. Sessions are the server's in strict mode.
 - [WEB] `$pageview`/`$page_leave` replace `$screen_view`/`$background`; the path is the screen.
 - [WEB] `page` (hostname, referrer, utm) exists on `$pageview` only. Referrer is a host, never a URL; same-site (including `www.`) referrers are omitted. UTM values over 128 chars are omitted, not truncated.
@@ -32,11 +32,12 @@ State: `[x]` implemented and covered by a test, `[ ]` not done.
 | `feature(key)` | `{discovery,start,use,success,failure}(props?)` emit `<key>_<role>`; a string first argument names the event | [x] |
 | `pageview(path?)` | manual pageview, deduplicated | [x] |
 | `identify(userId, traits?)` / `reset()` | product_analytics only; no-op + warning in strict | [x] |
-| `optOut()` / `optIn()` | flag in `union:optout`; opted out = nothing sent, queue dropped | [x] |
-| `[WEB]` `data-consent` / `consent(bool)` | pending: no storage, no network, events held in memory (≤100) and released on accept with their session; decline = `optOut()`; answer remembered in `union:consent`; `banner` loads `consent.js` (Accept/Decline equal weight) | [x] |
+| `optOut()` / `optIn()` | flag in `tapll:optout`; opted out = nothing sent, queue dropped | [x] |
+| `[WEB]` `data-consent` / `consent(bool)` | pending: no storage, no network, events held in memory (≤100) and released on accept with their session; decline = `optOut()`; answer remembered in `tapll:consent`; `banner` loads `consent.js` (Accept/Decline equal weight) | [x] |
 | `sessionId()` | product_analytics: live session id; strict: `session_id` of the latest 202 (memory only), `null` until then | [x] |
 | `flush()` | resolves when the queue is empty or the SDK is paused/stopped | [x] |
-| `union.q` stub | replayed in order after the first pageview | [x] |
+| `tapll.q` stub | replayed in order after the first pageview; an old `union.q` stub is drained too and `window.union` aliases `window.tapll` | [x] |
+| `[WEB]` rename migration | `union:*` -> `tapll:*` once on load (new wins, old removed); a migrated id sends no `$first_open` | [x] |
 | double load | second load is a no-op | [x] |
 
 - [WEB] `feature().use(props?)` takes no event name by default (the browser API in the brief); the RN-style `use('name', props?)` is also accepted.
@@ -60,11 +61,11 @@ Event name / feature key `^[a-z][a-z0-9_]*$` max 64 and no `$` prefix; role in t
 
 | | strict_anonymous | product_analytics |
 |---|---|---|
-| storage | none (only `union:optout` after `optOut()`) | `union:id`, `union:session`, `union:user`, `union:queue`, `union:optout` |
+| storage | none (only `tapll:optout` after `optOut()`) | `tapll:id`, `tapll:session`, `tapll:user`, `tapll:queue`, `tapll:optout` |
 | `session_id` | absent (server assigns) | on every event, 30 min inactivity rule |
 | identity | `{}` | `{install_id, user_id?, traits?}` |
 | identify / reset | no-op + warning | persisted / clears user + new session |
-| unsent events survive reload | no | yes (`union:queue`, max 200, FIFO) |
+| unsent events survive reload | no | yes (`tapll:queue`, max 200, FIFO) |
 
 [x] covered by `test/privacy.test.ts`, `test/session.test.ts`.
 
@@ -110,3 +111,5 @@ All [x] (`test/transport.test.ts`, `test/policy.test.ts`).
 ## 8. Size budget
 
 Original target: **3 KB gzip**. The full feature set above measures about 4.4 KB, so 0.1.0 enforced **4.5 KB**; 0.2.0 adds the consent gate (~0.4 KB) and `scripts/budget.mjs` enforces **5 KB** (the banner is a separate `consent.js`). To get back to 3 KB the candidates are, by size: persisted queue + restore (~250 B), `$page_leave` scroll tracking (~150 B), `feature()` handles (~150 B), 413 split and 400 per-event drop (~250 B), `data-exclude` globs, UTM/referrer context. Decide with product before cutting.
+
+0.5.0 (rename): the `union:*` migration and `union` alias/fallbacks raise the limit to **5.25 KB** (see `scripts/budget.mjs`).

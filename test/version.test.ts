@@ -5,7 +5,7 @@ import { VERSION } from '../src/version';
 it('SDK version equals package.json and is 0.4.0', () => {
   const pkg = JSON.parse(readFileSync(new URL('../package.json', import.meta.url), 'utf8'));
   expect(VERSION).toBe(pkg.version);
-  expect(VERSION).toBe('0.4.0');
+  expect(VERSION).toBe('0.5.0');
 });
 
 it('the schema fixture is the contract copy (never hand-edited)', () => {

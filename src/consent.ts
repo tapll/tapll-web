@@ -1,6 +1,6 @@
 /**
- * Union's own consent banner (`consent.js`), loaded by `u.js` only for `data-consent="banner"` while the
- * visitor has not answered, or by `union.showConsent()`. Kept out of `u.js` so sites that do not need it
+ * Tapll's own consent banner (`consent.js`), loaded by `u.js` only for `data-consent="banner"` while the
+ * visitor has not answered, or by `tapll.showConsent()`. Kept out of `u.js` so sites that do not need it
  * pay nothing for it.
  *
  * Accept and Decline carry equal weight — same size, same style, same order every time: an EU banner
@@ -14,13 +14,13 @@ const TEXT = 'We use privacy-friendly analytics to understand how this site is u
 
 function show(): void {
   const doc = document;
-  if (doc.getElementById('union-consent')) return;
+  if (doc.getElementById('tapll-consent')) return;
   const tag = doc.querySelector('script[data-key][data-consent]') || doc.querySelector('script[data-key]');
   const a = (n: string, d: string): string => ((tag && tag.getAttribute('data-consent-' + n)) || '').trim() || d;
   const policy = a('policy', '');
 
   const host = doc.createElement('div');
-  host.id = 'union-consent';
+  host.id = 'tapll-consent';
   const root = host.attachShadow({ mode: 'open' });
   // A quiet card: bottom-left on wide screens, a full-width sheet on phones. Both buttons share one class,
   // so neither can look like the "right" answer.
@@ -70,7 +70,7 @@ function show(): void {
     const v = (ev.target as Element).getAttribute && (ev.target as Element).getAttribute('data-v');
     if (v === null) return;
     try {
-      (window as any).union('consent', v === '1');
+      (window as any).tapll('consent', v === '1');
     } catch {
       /* never throw into the page */
     }
@@ -80,7 +80,7 @@ function show(): void {
 }
 
 try {
-  (window as any).__unionConsent = show;
+  (window as any).__tapllConsent = show;
   if (document.body) show();
   else document.addEventListener('DOMContentLoaded', show);
 } catch {

@@ -1,7 +1,8 @@
 import { UUID_RE, uuid } from './uuid';
 
-/** Storage keys. strict_anonymous touches none of them except `union:optout`, and only after optOut() was called. */
-export const K = { id: 'union:id', session: 'union:session', user: 'union:user', queue: 'union:queue', optout: 'union:optout', consent: 'union:consent' };
+/** Storage keys. strict_anonymous touches none of them except `tapll:optout`, and only after optOut() was called. */
+export const K = { id: 'tapll:id', session: 'tapll:session', user: 'tapll:user', queue: 'tapll:queue', optout: 'tapll:optout', consent: 'tapll:consent' };
+
 
 type Op = 'getItem' | 'setItem' | 'removeItem';
 /** localStorage that never throws (private mode, blocked storage, quota). */
@@ -17,6 +18,19 @@ export const store = {
   set: (k: string, v: string) => void ls('setItem', k, v),
   del: (k: string) => void ls('removeItem', k),
 };
+
+/**
+ * One-time move of keys written by the pre-rename SDK (`union:*` -> `tapll:*`): copy to the new key unless it
+ * already exists (the new one wins), then remove the old one.
+ */
+export function migrate(keys: string[]): void {
+  for (const k of keys) {
+    const old = 'union' + k.slice(5);
+    const v = store.get(old);
+    if (v !== null) (store.get(k) === null && store.set(k, v), store.del(old));
+  }
+}
+export const DATA_KEYS = [K.id, K.session, K.user, K.queue];
 
 /** Same rule as the server and `SessionManager.swift`: 30 minutes of inactivity ends a session. */
 export const SESSION_TIMEOUT_MS = 30 * 60 * 1000;

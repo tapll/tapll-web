@@ -7,5 +7,9 @@
  * product_analytics needs in the EU, so the enforced limit is 5 KB. The banner itself is `consent.js`
  * (~1.1 KB), loaded only by the sites that ask for it. See docs/CHECKLIST.md ("Size budget") for what
  * would have to go to get back to 3 KB.
+ *
+ * 0.5.0 (Union -> Tapll rename) adds the one-time `union:*` -> `tapll:*` storage migration and the `window.union`
+ * alias / `union.q` / `data-union-*` fallbacks, ~0.05 KB, so the limit is 5.25 KB. Drop the fallbacks and this
+ * goes back to 5 KB once old snippets are gone.
  */
-export const BUDGET = 5 * 1024;
+export const BUDGET = 5.25 * 1024;

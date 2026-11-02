@@ -1,4 +1,4 @@
-/** Public typings for `window.union` (union-web). */
+/** Public typings for `window.tapll` (tapll-web); `window.union` is kept as an alias of the same object. */
 export type PropertyValue = string | number | boolean;
 export type Properties = Record<string, PropertyValue>;
 export type FeatureRole = 'discovery' | 'start' | 'use' | 'success' | 'failure';
@@ -12,7 +12,7 @@ export interface FeatureHandle {
   failure(props?: Properties): void;
 }
 
-export interface Union {
+export interface Tapll {
   (command: string, ...args: unknown[]): unknown;
   readonly version: string;
   track(name: string, props?: Properties, context?: { feature?: string; role?: FeatureRole }): void;
@@ -29,12 +29,17 @@ export interface Union {
   /** The visitor's answer (`data-consent`): `true` releases what waited in memory, `false` is `optOut()`. Remembered. */
   consent(granted: boolean): void;
   consentStatus(): 'granted' | 'denied' | 'pending' | 'not_required';
-  /** Re-opens Union's own banner (`data-consent="banner"`), e.g. from a "Privacy choices" footer link. */
+  /** Re-opens Tapll's own banner (`data-consent="banner"`), e.g. from a "Privacy choices" footer link. */
   showConsent(): void;
 }
 
+/** @deprecated Old name of `Tapll`. */
+export type Union = Tapll;
+
 declare global {
   interface Window {
-    union?: Union;
+    tapll?: Tapll;
+    /** @deprecated Alias of `window.tapll`. */
+    union?: Tapll;
   }
 }

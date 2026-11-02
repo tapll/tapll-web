@@ -9,7 +9,7 @@ afterEach(teardownEnv);
 describe('readConfig', () => {
   it('defaults: strict, hosted endpoint, auto and spa on, production', () => {
     const c = config();
-    expect(c).toMatchObject({ key: 'av_test', mode: 'strict_anonymous', url: 'https://in.useunion.dev/v1/web', auto: true, spa: true, env: 'production', exclude: [] });
+    expect(c).toMatchObject({ key: 'av_test', mode: 'strict_anonymous', url: 'https://in.tapll.com/v1/web', auto: true, spa: true, env: 'production', exclude: [] });
     expect(c.version).toBeUndefined();
   });
   it('requires data-key (warns, null)', () => {
@@ -31,8 +31,8 @@ describe('readConfig', () => {
   });
   it('api: absolute, trailing slash trimmed, relative first-party proxy', () => {
     expect(config({ api: 'https://t.example.com/' }).url).toBe('https://t.example.com/v1/web');
-    expect(config({ api: '/_union' }).url).toBe('/_union/v1/web');
-    expect(config({ api: '/_union///' }).url).toBe('/_union/v1/web');
+    expect(config({ api: '/_tapll' }).url).toBe('/_tapll/v1/web');
+    expect(config({ api: '/_tapll///' }).url).toBe('/_tapll/v1/web');
   });
   it('auto and spa switch off only with "false"', () => {
     expect(config({ auto: 'false' }).auto).toBe(false);

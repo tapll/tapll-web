@@ -1,4 +1,4 @@
-import { createState, K, store, type User } from './session';
+import { createState, K, DATA_KEYS, migrate, store, type User } from './session';
 import { createTransport } from './transport';
 import type { Config, EmitOptions, WebEvent } from './types';
 import { uuid } from './uuid';
@@ -9,6 +9,8 @@ import { VERSION } from './version';
 export function createCore(cfg: Config) {
   const pa = cfg.mode === 'product_analytics';
   const st = pa ? createState() : null;
+  // Visitors of the pre-rename SDK keep their opt-out, consent, id and queue (`union:*` -> `tapll:*`, once).
+  migrate(cfg.consent == 'none' ? [K.optout] : [K.optout, K.consent]); // strict_anonymous reads nothing else
   let opted = store.get(K.optout) === '1';
   let serverSession: string | null = null; // strict_anonymous: assigned by the server, memory only
   // Consent mode: until the visitor accepts, nothing is stored and nothing is sent. Events wait here,
@@ -18,6 +20,8 @@ export function createCore(cfg: Config) {
   let held: WebEvent[] = [];
   let heldUser: User | null | undefined;
   const HELD_MAX = 100;
+  // While consent is pending nothing is touched; the old data moves when it is granted (before a new id is minted).
+  if (pa && !pending) migrate(DATA_KEYS);
 
   const tx = createTransport({
     url: cfg.url,
@@ -93,6 +97,7 @@ export function createCore(cfg: Config) {
       const wasPending = pending;
       opted = pending = false;
       if (!wasPending) return;
+      if (pa) migrate(DATA_KEYS);
       tx.restore();
       if (heldUser !== undefined && st) st.setUser(heldUser);
       const out = held;

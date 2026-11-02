@@ -1,7 +1,7 @@
 import type { Config } from './types';
 import { warn } from './validation';
 
-export const DEFAULT_API = 'https://in.useunion.dev';
+export const DEFAULT_API = 'https://in.tapll.com';
 
 /** `*` matches any run of characters (slashes included); everything else is literal. */
 export const globToRegExp = (g: string): RegExp => new RegExp('^' + g.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*') + '$');

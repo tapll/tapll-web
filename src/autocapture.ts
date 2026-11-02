@@ -8,7 +8,7 @@ const UTM = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_conten
 const bare = (h: string): string => h.toLowerCase().replace(/^www\./, '');
 
 /**
- * Pageviews (load + SPA), `$page_leave`, outbound/download clicks and `data-union-event` clicks.
+ * Pageviews (load + SPA), `$page_leave`, outbound/download clicks and `data-tapll-event` (or the older `data-union-event`) clicks.
  * Returns the manual `pageview`.
  */
 export function startAutocapture(core: Core, track: (name: unknown, props?: unknown, ctx?: { feature?: string; role?: Role }) => void) {
@@ -110,8 +110,8 @@ export function startAutocapture(core: Core, track: (name: unknown, props?: unkn
     'click',
     guard((e: MouseEvent) => {
       const t = e.target as Element;
-      const tag = t.closest('[data-union-event]');
-      const attr = (n: string) => (tag && tag.getAttribute('data-union-' + n)) || undefined;
+      const tag = t.closest('[data-tapll-event],[data-union-event]');
+      const attr = (n: string) => (tag && (tag.getAttribute('data-tapll-' + n) || tag.getAttribute('data-union-' + n))) || undefined;
       if (tag) track(attr('event'), undefined, { feature: attr('feature'), role: attr('role') as Role });
       const a = core.cfg.auto && t.closest('a[href]');
       if (!a) return;

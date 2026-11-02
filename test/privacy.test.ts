@@ -41,7 +41,7 @@ describe('strict_anonymous uses no storage at all', () => {
     expect(s.clear).not.toHaveBeenCalled();
     expect(s.cookieSet).not.toHaveBeenCalled();
     expect(s.session).not.toHaveBeenCalled();
-    expect(s.get.mock.calls.every(([k]) => k === 'union:optout')).toBe(true);
+    expect(s.get.mock.calls.every(([k]) => k === 'tapll:optout' || k === 'union:optout')).toBe(true);
     expect(env().win.localStorage.length).toBe(0);
     expect(env().events().length).toBeGreaterThan(5);
   });
@@ -87,7 +87,7 @@ describe('strict_anonymous uses no storage at all', () => {
     api.track('x');
     hide(env());
     expect(s.set).not.toHaveBeenCalled();
-    expect(env().win.localStorage.getItem('union:queue')).toBeNull();
+    expect(env().win.localStorage.getItem('tapll:queue')).toBeNull();
   });
 });
 
@@ -96,7 +96,7 @@ describe('opt-out', () => {
     const s = spies();
     const { api } = start();
     api.optOut();
-    expect(s.set.mock.calls).toEqual([['union:optout', '1']]);
+    expect(s.set.mock.calls).toEqual([['tapll:optout', '1']]);
     expect(env().win.localStorage.length).toBe(1);
   });
 
@@ -121,7 +121,7 @@ describe('opt-out', () => {
     await again.api.flush();
     expect(env().fetchMock).not.toHaveBeenCalled();
     again.api.optIn();
-    expect(env().win.localStorage.getItem('union:optout')).toBeNull();
+    expect(env().win.localStorage.getItem('tapll:optout')).toBeNull();
     again.api.track('y');
     await again.api.flush();
     expect(env().events('y')).toHaveLength(1);
@@ -132,16 +132,16 @@ describe('opt-out', () => {
     const { api } = start({ mode: 'product_analytics' });
     api.track('x');
     hide(env());
-    expect(env().win.localStorage.getItem('union:queue')).not.toBeNull();
+    expect(env().win.localStorage.getItem('tapll:queue')).not.toBeNull();
     api.optOut();
-    expect(env().win.localStorage.getItem('union:queue')).toBeNull();
+    expect(env().win.localStorage.getItem('tapll:queue')).toBeNull();
     await api.flush();
     expect(env().fetchMock).not.toHaveBeenCalled();
   });
 
   it('a previously opted-out visitor does not replay a stale persisted queue', async () => {
-    env().win.localStorage.setItem('union:optout', '1');
-    env().win.localStorage.setItem('union:queue', JSON.stringify([{ event_id: 'a', name: 'x' }]));
+    env().win.localStorage.setItem('tapll:optout', '1');
+    env().win.localStorage.setItem('tapll:queue', JSON.stringify([{ event_id: 'a', name: 'x' }]));
     const { api } = start({ mode: 'product_analytics' });
     await api.flush();
     expect(env().fetchMock).not.toHaveBeenCalled();
@@ -149,14 +149,14 @@ describe('opt-out', () => {
 });
 
 describe('product_analytics does use storage (consent is the site\'s job)', () => {
-  it('writes union:id, union:session; never a cookie', async () => {
+  it('writes tapll:id, tapll:session; never a cookie', async () => {
     const s = spies();
     const { api } = start({ mode: 'product_analytics' });
     api.track('x');
     await api.flush();
     const keys = new Set(s.set.mock.calls.map(([k]) => k));
-    expect(keys.has('union:id')).toBe(true);
-    expect(keys.has('union:session')).toBe(true);
+    expect(keys.has('tapll:id')).toBe(true);
+    expect(keys.has('tapll:session')).toBe(true);
     expect(s.cookieSet).not.toHaveBeenCalled();
   });
 });

@@ -6,7 +6,7 @@ export const PATH_MAX = 128;
 
 export function warn(msg: string): void {
   try {
-    console.warn('[union] ' + msg);
+    console.warn('[tapll] ' + msg);
   } catch {
     /* never throw */
   }

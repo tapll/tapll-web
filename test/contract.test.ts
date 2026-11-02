@@ -13,7 +13,7 @@ async function everything(attrs: Record<string, string>) {
   api.feature('checkout').success({ value: 10 });
   api.pageview('/virtual?x=1#y');
   w.history.pushState({}, '', '/docs/getting-started?tab=2');
-  w.document.body.innerHTML = '<a id="o" href="https://other.org/a?b=1">o</a><a id="d" href="/files/a.pdf">d</a><button id="t" data-union-event="cta_clicked" data-union-feature="pricing" data-union-role="use">t</button>';
+  w.document.body.innerHTML = '<a id="o" href="https://other.org/a?b=1">o</a><a id="d" href="/files/a.pdf">d</a><button id="t" data-tapll-event="cta_clicked" data-tapll-feature="pricing" data-tapll-role="use">t</button>';
   for (const id of ['o', 'd', 't']) w.document.getElementById(id).dispatchEvent(new w.MouseEvent('click', { bubbles: true }));
   await tick(3000);
   hide(env());

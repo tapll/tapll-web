@@ -182,51 +182,112 @@ describe('never throws', () => {
   });
 });
 
-describe('command queue stub (window.union.q)', () => {
+describe('command queue stub (window.tapll.q)', () => {
   const stub = () => {
     const w = env().win as any;
-    w.union = function () {
-      (w.union.q = w.union.q || []).push(arguments);
+    w.tapll = function () {
+      (w.tapll.q = w.tapll.q || []).push(arguments);
     };
     return w;
   };
 
   it('replays calls made before the script loaded, in order, then the object API works', async () => {
     const w = stub();
-    w.union('track', 'early_one', { a: 1 });
-    w.union('feature', 'onboarding'); // returns nothing through the stub; must not break the replay
-    w.union('track', 'early_two', undefined, { feature: 'onboarding', role: 'start' });
-    w.union('pageview', '/virtual');
+    w.tapll('track', 'early_one', { a: 1 });
+    w.tapll('feature', 'onboarding'); // returns nothing through the stub; must not break the replay
+    w.tapll('track', 'early_two', undefined, { feature: 'onboarding', role: 'start' });
+    w.tapll('pageview', '/virtual');
     boot(script());
-    w.union.track('late_one');
-    await w.union.flush();
+    w.tapll.track('late_one');
+    await w.tapll.flush();
     expect(env().events().map((e) => e.name + '@' + e.screen)).toEqual(['$pageview@/app', 'early_one@/app', 'early_two@/app', '$page_leave@/app', '$pageview@/virtual', 'late_one@/app']);
     expect(env().events('early_two')[0]).toMatchObject({ feature: 'onboarding', role: 'start' });
-    expect(w.union.version).toBe('0.4.0');
+    expect(w.tapll.version).toBe('0.5.0');
   });
 
-  it('command style keeps working after load: union("track", ...) and union("feature", key)', async () => {
+  it('command style keeps working after load: tapll("track", ...) and tapll("feature", key)', async () => {
     const w = stub();
     boot(script());
-    w.union('track', 'cmd_style');
-    w.union('feature', 'k').success();
-    await w.union('flush');
+    w.tapll('track', 'cmd_style');
+    w.tapll('feature', 'k').success();
+    await w.tapll('flush');
     expect(names()).toEqual(['$pageview', 'cmd_style', 'k_success']);
   });
 
   it('a bad queued call does not stop the rest', async () => {
     const w = stub();
-    w.union('track', 'Not Valid');
-    w.union('explode');
-    w.union('track', 'fine');
+    w.tapll('track', 'Not Valid');
+    w.tapll('explode');
+    w.tapll('track', 'fine');
     boot(script());
-    await w.union.flush();
+    await w.tapll.flush();
     expect(names()).toEqual(['$pageview', 'fine']);
   });
 
-  it('works without any stub: boot installs window.union', async () => {
+  it('works without any stub: boot installs window.tapll', async () => {
     boot(script());
-    expect(typeof (env().win as any).union.track).toBe('function');
+    expect(typeof (env().win as any).tapll.track).toBe('function');
+  });
+});
+
+describe('pre-rename compatibility (window.union)', () => {
+  it('window.union is the same object as window.tapll', () => {
+    const w = env().win as any;
+    boot(script());
+    expect(w.union).toBe(w.tapll);
+    expect(w.union.version).toBe('0.5.0');
+  });
+
+  it('drains a queue left by the old snippet (union.q) and keeps union(...) working', async () => {
+    const w = env().win as any;
+    w.union = function () {
+      (w.union.q = w.union.q || []).push(arguments);
+    };
+    w.union('track', 'from_old_snippet');
+    boot(script());
+    w.union('track', 'old_style_after_load');
+    expect(w.union.sessionId).toBeTypeOf('function');
+    await w.tapll.flush();
+    expect(names()).toEqual(['$pageview', 'from_old_snippet', 'old_style_after_load']);
+  });
+
+  it('drains both queues when a page has both stubs', async () => {
+    const w = env().win as any;
+    const mk = (n: string) => {
+      w[n] = function () {
+        (w[n].q = w[n].q || []).push(arguments);
+      };
+    };
+    mk('tapll');
+    mk('union');
+    w.tapll('track', 'via_new');
+    w.union('track', 'via_old');
+    boot(script());
+    await w.tapll.flush();
+    expect(names()).toEqual(['$pageview', 'via_new', 'via_old']);
+  });
+
+  it('the old snippet aliased to the new stub is drained once', async () => {
+    const w = env().win as any;
+    w.tapll = w.union = function () {
+      (w.tapll.q = w.tapll.q || []).push(arguments);
+    };
+    w.tapll('track', 'once');
+    boot(script());
+    await w.tapll.flush();
+    expect(names()).toEqual(['$pageview', 'once']);
+  });
+
+  it('data-union-* attributes on tagged elements still work, data-tapll-* wins', async () => {
+    boot(script());
+    const d = env().win.document;
+    d.body.innerHTML = '<button id="a" data-union-event="old_click" data-union-feature="f" data-union-role="use">a</button><button id="b" data-tapll-event="new_click" data-union-event="ignored">b</button>';
+    (d.getElementById('a') as any).click();
+    (d.getElementById('b') as any).click();
+    await (env().win as any).tapll.flush();
+    expect(env().events('old_click')[0]).toMatchObject({ feature: 'f', role: 'use' });
+    expect(names()).toContain('new_click');
+    expect(names()).not.toContain('ignored');
   });
 });
 
@@ -234,9 +295,9 @@ describe('loading twice', () => {
   it('the second load is a no-op: same object, one pageview, no duplicate listeners', async () => {
     const w = env().win as any;
     boot(script());
-    const first = w.union;
+    const first = w.tapll;
     boot(script({ key: 'av_other' }));
-    expect(w.union).toBe(first);
+    expect(w.tapll).toBe(first);
     w.history.pushState({}, '', '/second');
     await first.flush();
     expect(env().events('$pageview').map((e) => e.screen)).toEqual(['/app', '/second']);
@@ -248,21 +309,21 @@ describe('boot', () => {
   it('without data-key: warns, installs nothing, throws nothing', () => {
     const w = env().win as any;
     expect(() => boot(script({ key: '' }))).not.toThrow();
-    expect(w.union).toBeUndefined();
+    expect(w.tapll).toBeUndefined();
     expect(env().warn).toHaveBeenCalled();
     expect(() => boot(null)).not.toThrow();
   });
 
   it('finds the attributes of the script: mode, version, api, exclude', async () => {
     const w = env().win as any;
-    boot(script({ mode: 'product_analytics', version: '9.9', api: '/_union', exclude: '/app' }));
-    w.union.track('x');
-    await w.union.flush();
+    boot(script({ mode: 'product_analytics', version: '9.9', api: '/_tapll', exclude: '/app' }));
+    w.tapll.track('x');
+    await w.tapll.flush();
     expect(env().fetchMock).not.toHaveBeenCalled(); // /app is excluded: nothing was recorded
     w.history.pushState({}, '', '/ok');
-    w.union.track('y');
-    await w.union.flush();
-    expect(env().fetchMock.mock.calls[0][0]).toBe('/_union/v1/web');
+    w.tapll.track('y');
+    await w.tapll.flush();
+    expect(env().fetchMock.mock.calls[0][0]).toBe('/_tapll/v1/web');
     expect(env().fetched[0]).toMatchObject({ privacy_mode: 'product_analytics', device: { app_version: '9.9' } });
   });
 

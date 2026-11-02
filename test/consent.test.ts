@@ -31,7 +31,7 @@ describe('data-consent: nothing is stored or sent before the visitor answers', (
     expect(events.every((e: any) => typeof e.session_id === 'string')).toBe(true);
     expect(events.find((e: any) => e.name === '$pageview').page.utm_source).toBe('hn');
     expect(env().batches().at(-1).identity.user_id).toBe('u1');
-    expect(env().win.localStorage.getItem('union:consent')).toBe('granted');
+    expect(env().win.localStorage.getItem('tapll:consent')).toBe('granted');
   });
 
   it('decline is optOut(): the held events are dropped and nothing is ever sent', async () => {
@@ -43,12 +43,12 @@ describe('data-consent: nothing is stored or sent before the visitor answers', (
     await api.flush();
     expect(env().fetched.length).toBe(0);
     expect(api.consentStatus()).toBe('denied');
-    expect(env().win.localStorage.getItem('union:optout')).toBe('1');
-    expect(env().win.localStorage.getItem('union:id')).toBeNull();
+    expect(env().win.localStorage.getItem('tapll:optout')).toBe('1');
+    expect(env().win.localStorage.getItem('tapll:id')).toBeNull();
   });
 
   it('remembers an answer: a later page load starts collecting at once', async () => {
-    env().win.localStorage.setItem('union:consent', 'granted');
+    env().win.localStorage.setItem('tapll:consent', 'granted');
     const { api } = start({ mode: 'product_analytics', consent: 'banner' });
     expect(api.consentStatus()).toBe('granted');
     await api.flush();
@@ -56,7 +56,7 @@ describe('data-consent: nothing is stored or sent before the visitor answers', (
   });
 
   it('remembers a decline across loads', async () => {
-    env().win.localStorage.setItem('union:optout', '1');
+    env().win.localStorage.setItem('tapll:optout', '1');
     const { api } = start({ mode: 'product_analytics', consent: 'banner' });
     expect(api.consentStatus()).toBe('denied');
   });
@@ -76,7 +76,7 @@ describe('data-consent: nothing is stored or sent before the visitor answers', (
     api.consent(true);
     await api.flush();
     expect(env().events().length).toBeGreaterThan(0);
-    expect(w.set.mock.calls.map(([k]) => k)).toEqual(['union:consent']);
+    expect(w.set.mock.calls.map(([k]) => k)).toEqual(['tapll:consent']);
     for (const b of env().batches()) expect(b.identity).toEqual({});
   });
 
@@ -90,17 +90,17 @@ describe('data-consent: nothing is stored or sent before the visitor answers', (
 });
 
 describe('consent.js', () => {
-  it('renders Accept and Decline with equal weight and answers through union.consent', async () => {
+  it('renders Accept and Decline with equal weight and answers through tapll.consent', async () => {
     const w = env().win as any;
     const calls: unknown[] = [];
-    w.union = (...a: unknown[]) => calls.push(a);
+    w.tapll = (...a: unknown[]) => calls.push(a);
     const tag = w.document.createElement('script');
     tag.setAttribute('data-key', 'av_x');
     tag.setAttribute('data-consent', 'banner');
     tag.setAttribute('data-consent-policy', 'https://example.com/privacy');
     w.document.head.appendChild(tag);
     new w.Function(readFileSync(new URL('../dist/consent.js', import.meta.url), 'utf8'))();
-    const host = w.document.getElementById('union-consent');
+    const host = w.document.getElementById('tapll-consent');
     expect(host).toBeTruthy();
     const buttons = Array.from(host.shadowRoot.querySelectorAll('button')) as any[];
     expect(buttons.map((b) => b.textContent)).toEqual(['Decline', 'Accept']);
@@ -109,7 +109,7 @@ describe('consent.js', () => {
     expect(host.shadowRoot.querySelector('a').getAttribute('href')).toBe('https://example.com/privacy');
     buttons[1].click();
     expect(calls).toEqual([['consent', true]]);
-    expect(w.document.getElementById('union-consent')).toBeNull();
+    expect(w.document.getElementById('tapll-consent')).toBeNull();
   });
 });
 
@@ -118,19 +118,19 @@ describe('u.js loads the banner itself', () => {
     const { boot } = await import('../src/boot');
     const w = env().win as any;
     const tag = w.document.createElement('script');
-    tag.setAttribute('src', 'https://cdn.useunion.dev/v0/u.js');
+    tag.setAttribute('src', 'https://cdn.tapll.com/v0/u.js');
     tag.setAttribute('data-key', 'av_x');
     tag.setAttribute('data-mode', 'product_analytics');
     tag.setAttribute('data-consent', 'banner');
     boot(tag);
-    const injected = w.document.querySelector('script[data-union-consent]');
-    expect(injected?.getAttribute('src')).toBe('https://cdn.useunion.dev/v0/consent.js');
+    const injected = w.document.querySelector('script[data-tapll-consent]');
+    expect(injected?.getAttribute('src')).toBe('https://cdn.tapll.com/v0/consent.js');
 
     // A visitor who already answered never sees it again.
     injected.remove();
-    delete w.union;
-    w.localStorage.setItem('union:consent', 'granted');
+    delete w.tapll;
+    w.localStorage.setItem('tapll:consent', 'granted');
     boot(tag);
-    expect(w.document.querySelector('script[data-union-consent]')).toBeNull();
+    expect(w.document.querySelector('script[data-tapll-consent]')).toBeNull();
   });
 });

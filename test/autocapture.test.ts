@@ -74,33 +74,33 @@ describe('outbound and download', () => {
   });
 });
 
-describe('data-union-event', () => {
+describe('data-tapll-event', () => {
   it('tracks the named event on click', async () => {
     const { api } = start();
-    click('<button id="t" data-union-event="signup_clicked">Sign up</button>');
+    click('<button id="t" data-tapll-event="signup_clicked">Sign up</button>');
     await api.flush();
     expect(names()).toMatchObject([{ name: 'signup_clicked', screen: '/docs' }]);
   });
 
-  it('with data-union-feature and data-union-role', async () => {
+  it('with data-tapll-feature and data-tapll-role', async () => {
     const { api } = start();
-    click('<div data-union-event="pricing_cta" data-union-feature="pricing" data-union-role="start"><span id="t">x</span></div>');
+    click('<div data-tapll-event="pricing_cta" data-tapll-feature="pricing" data-tapll-role="start"><span id="t">x</span></div>');
     await api.flush();
     expect(names()[0]).toMatchObject({ name: 'pricing_cta', feature: 'pricing', role: 'start' });
   });
 
   it('works with data-auto="false"', async () => {
     const { api } = start({ auto: 'false' });
-    click('<button id="t" data-union-event="still_tracked">x</button>');
+    click('<button id="t" data-tapll-event="still_tracked">x</button>');
     await api.flush();
     expect(names()[0].name).toBe('still_tracked');
   });
 
   it('an invalid name, feature or role drops the event with a warning', async () => {
     const { api } = start();
-    click('<button id="t" data-union-event="Bad Name">x</button>');
-    click('<button id="t" data-union-event="ok_name" data-union-feature="Bad">x</button>');
-    click('<button id="t" data-union-event="ok_name" data-union-role="boss">x</button>');
+    click('<button id="t" data-tapll-event="Bad Name">x</button>');
+    click('<button id="t" data-tapll-event="ok_name" data-tapll-feature="Bad">x</button>');
+    click('<button id="t" data-tapll-event="ok_name" data-tapll-role="boss">x</button>');
     await api.flush();
     expect(names()).toHaveLength(0);
     expect(env().warn).toHaveBeenCalled();
@@ -108,7 +108,7 @@ describe('data-union-event', () => {
 
   it('a tagged link also records the outbound click', async () => {
     const { api } = start();
-    click('<a id="t" href="https://other.org" data-union-event="partner_click">x</a>');
+    click('<a id="t" href="https://other.org" data-tapll-event="partner_click">x</a>');
     await api.flush();
     expect(names().map((e) => e.name).sort()).toEqual(['$outbound', 'partner_click']);
   });

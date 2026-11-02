@@ -1,4 +1,4 @@
-// Stages cdn/public for the static-assets Worker (`cdn/wrangler.jsonc`), served at cdn.useunion.dev:
+// Stages cdn/public for the static-assets Worker (`cdn/wrangler.jsonc`), served at cdn.tapll.com:
 //
 //   /v<major>/…           — what every snippet loads; the newest release of that major, cached 1 h
 //   /v<x.y.z>/…           — one release, immutable, for SRI-pinned installs — forever

@@ -6,7 +6,7 @@ import { VERSION } from './version';
 
 export type FeatureHandle = Record<Role, (propsOrName?: Properties | string, props?: Properties) => void>;
 
-export interface Union {
+export interface Tapll {
   (command: string, ...args: unknown[]): unknown;
   readonly version: string;
   track(name: string, props?: Properties, context?: { feature?: string; role?: Role }): void;
@@ -24,18 +24,18 @@ export interface Union {
 }
 
 /**
- * Builds the public `union` function/object for one config and starts auto-capture.
+ * Builds the public `tapll` function/object for one config and starts auto-capture.
  * Every method goes through the one dispatcher below, so nothing ever throws into the page.
  */
-/** Loads `consent.js` from next to `u.js` once; it renders the banner and answers through `union.consent`. */
+/** Loads `consent.js` from next to `u.js` once; it renders the banner and answers through `tapll.consent`. */
 export function loadBanner(cfg: Config): void {
   const w = window as any;
-  if (w.__unionConsent) return w.__unionConsent();
-  if (!cfg.base || document.querySelector('script[data-union-consent]')) return;
+  if (w.__tapllConsent) return w.__tapllConsent();
+  if (!cfg.base || document.querySelector('script[data-tapll-consent]')) return;
   const s = document.createElement('script');
   s.src = cfg.base + 'consent.js';
   s.async = true;
-  s.setAttribute('data-union-consent', '');
+  s.setAttribute('data-tapll-consent', '');
   document.head.appendChild(s);
 }
 
@@ -75,7 +75,7 @@ export function createApi(cfg: Config) {
     flush: () => core.tx.flush(),
     consent: (granted: unknown) => core.consent(granted === true),
     consentStatus: () => core.consentStatus(),
-    /** Re-opens Union's banner — for a "Privacy choices" link in the footer. */
+    /** Re-opens Tapll's banner — for a "Privacy choices" link in the footer. */
     showConsent: () => loadBanner(cfg),
   };
 
@@ -89,5 +89,5 @@ export function createApi(cfg: Config) {
   };
   for (const k in commands) api[k] = (...a: unknown[]) => api(k, ...a);
   api.version = VERSION;
-  return { api: api as Union, core };
+  return { api: api as Tapll, core };
 }

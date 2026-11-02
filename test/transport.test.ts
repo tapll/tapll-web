@@ -14,7 +14,7 @@ describe('request shape', () => {
     const { api } = start();
     await api.flush();
     const [url, init] = env().fetchMock.mock.calls[0];
-    expect(url).toBe('https://in.useunion.dev/v1/web');
+    expect(url).toBe('https://in.tapll.com/v1/web');
     expect(init.method).toBe('POST');
     expect(init.headers).toEqual({ 'content-type': 'text/plain;charset=UTF-8' });
     expect(init.credentials).toBe('omit');
@@ -23,9 +23,9 @@ describe('request shape', () => {
   });
 
   it('posts to the first-party proxy given by data-api', async () => {
-    const { api } = start({ api: '/_union' });
+    const { api } = start({ api: '/_tapll' });
     await api.flush();
-    expect(env().fetchMock.mock.calls[0][0]).toBe('/_union/v1/web');
+    expect(env().fetchMock.mock.calls[0][0]).toBe('/_tapll/v1/web');
   });
 
   it('keepalive is off for bodies of 60 KB and more', async () => {
@@ -44,7 +44,7 @@ describe('request shape', () => {
     const b = env().fetched[0];
     expect(b).toMatchObject({ contract_version: 1, environment: 'production', privacy_mode: 'strict_anonymous', identity: {} });
     expect(b.sent_at).toBe(Date.now());
-    expect(b.device).toMatchObject({ os_name: 'Web', sdk_version: '0.4.0', app_version: '2026.10.1', screen_width: 1280 });
+    expect(b.device).toMatchObject({ os_name: 'Web', sdk_version: '0.5.0', app_version: '2026.10.1', screen_width: 1280 });
     expect(typeof b.device.locale).toBe('string');
     expect(b.device.timezone).toBeTypeOf('string');
     expect(b.batch_id).toMatch(/^[0-9a-f-]{36}$/);
@@ -309,7 +309,7 @@ describe('page hide', () => {
     await tick(0);
     expect(env().beacon).toHaveBeenCalledTimes(1);
     const [url, blob] = env().beacon.mock.calls[0];
-    expect(url).toBe('https://in.useunion.dev/v1/web');
+    expect(url).toBe('https://in.tapll.com/v1/web');
     expect(blob.type.toLowerCase()).toBe('text/plain;charset=utf-8');
     expect(env().beaconed[0].key).toBe('av_test');
     expect(env().beaconed[0].events.map((e: any) => e.name)).toEqual(['$pageview', 'last_words', '$page_leave']);
@@ -364,7 +364,7 @@ describe('persisted queue (product_analytics)', () => {
     await api.flush(); // first request fails -> backing off, nothing more is sent
     track(api, 249);
     hide(env());
-    const stored = JSON.parse(env().win.localStorage.getItem('union:queue')!);
+    const stored = JSON.parse(env().win.localStorage.getItem('tapll:queue')!);
     expect(stored).toHaveLength(200);
     expect(stored.at(-1).name).toBe('$page_leave'); // newest kept
     expect(stored.at(-2).properties.i).toBe(248);
@@ -378,7 +378,7 @@ describe('persisted queue (product_analytics)', () => {
     await first.api.flush();
     first.api.track('survivor');
     hide(env());
-    const persisted = JSON.parse(env().win.localStorage.getItem('union:queue')!).map((e: any) => e.event_id);
+    const persisted = JSON.parse(env().win.localStorage.getItem('tapll:queue')!).map((e: any) => e.event_id);
     expect(persisted.length).toBeGreaterThan(1);
 
     env().reply({ status: 202 });
@@ -388,29 +388,29 @@ describe('persisted queue (product_analytics)', () => {
     await second.api.flush();
     const sent = env().fetched.flatMap((b: any) => b.events.map((e: any) => e.event_id));
     for (const id of persisted) expect(sent).toContain(id);
-    expect(env().win.localStorage.getItem('union:queue')).toBeNull();
+    expect(env().win.localStorage.getItem('tapll:queue')).toBeNull();
   });
 
   it('clears the persisted queue when the queue is acknowledged', async () => {
     env().beacon.mockImplementation(() => false);
     const { api } = start(pa);
     hide(env());
-    expect(env().win.localStorage.getItem('union:queue')).not.toBeNull();
+    expect(env().win.localStorage.getItem('tapll:queue')).not.toBeNull();
     hide(env(), 'visible');
     await api.flush();
-    expect(env().win.localStorage.getItem('union:queue')).toBeNull();
+    expect(env().win.localStorage.getItem('tapll:queue')).toBeNull();
   });
 
   it('401 drops the persisted queue too', async () => {
-    env().win.localStorage.setItem('union:queue', JSON.stringify([{ event_id: '01a17280-b500-7179-a2b7-000000000001', session_id: '01a17280-b500-7179-a2b7-000000000002', name: 'x', timestamp: 1 }]));
+    env().win.localStorage.setItem('tapll:queue', JSON.stringify([{ event_id: '01a17280-b500-7179-a2b7-000000000001', session_id: '01a17280-b500-7179-a2b7-000000000002', name: 'x', timestamp: 1 }]));
     env().reply({ status: 401 });
     const { api } = start(pa);
     await api.flush();
-    expect(env().win.localStorage.getItem('union:queue')).toBeNull();
+    expect(env().win.localStorage.getItem('tapll:queue')).toBeNull();
   });
 
   it('a corrupt persisted queue is ignored', async () => {
-    env().win.localStorage.setItem('union:queue', '{not json');
+    env().win.localStorage.setItem('tapll:queue', '{not json');
     const { api } = start(pa);
     await api.flush();
     // A fresh browser: the first visit, then the page view; nothing from the corrupt queue.

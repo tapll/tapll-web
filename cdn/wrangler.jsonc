@@ -1,8 +1,8 @@
 {
   "$schema": "../node_modules/wrangler/config-schema.json",
   // Static assets only: no Worker script runs, so serving u.js costs no CPU and has no code to break.
-  "name": "union-cdn",
+  "name": "tapll-cdn",
   "compatibility_date": "2025-08-01",
   "assets": { "directory": "./public", "not_found_handling": "none" },
-  "routes": [{ "pattern": "cdn.useunion.dev", "custom_domain": true }]
+  "routes": [{ "pattern": "cdn.tapll.com", "custom_domain": true }]
 }

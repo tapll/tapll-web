@@ -13,7 +13,7 @@ export const MAX_PERSISTED = 200;
 
 export interface TransportOptions {
   url: string;
-  /** product_analytics: unsent events survive a reload via `union:queue`. */
+  /** product_analytics: unsent events survive a reload via `tapll:queue`. */
   persist: boolean;
   /** Wraps events into a `WebEventBatch` (identity/device are read at send time). */
   build: (events: WebEvent[], batchId: string) => unknown;

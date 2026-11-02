@@ -25,13 +25,13 @@ describe('createState (session rules, same as SessionManager.swift)', () => {
     expect(st.touch()).toBe(b);
   });
 
-  it('persists {id, startedAt, lastActivityAt} in localStorage union:session', async () => {
+  it('persists {id, startedAt, lastActivityAt} in localStorage tapll:session', async () => {
     const st = createState();
     const id = st.touch();
     const t0 = Date.now();
     await tick(5 * MIN);
     st.touch();
-    expect(JSON.parse(env().win.localStorage.getItem('union:session')!)).toEqual({ id, startedAt: t0, lastActivityAt: t0 + 5 * MIN });
+    expect(JSON.parse(env().win.localStorage.getItem('tapll:session')!)).toEqual({ id, startedAt: t0, lastActivityAt: t0 + 5 * MIN });
   });
 
   it('a second instance (another tab / a reload) continues the stored session', async () => {
@@ -49,9 +49,9 @@ describe('createState (session rules, same as SessionManager.swift)', () => {
   });
 
   it('corrupt snapshots are ignored', () => {
-    env().win.localStorage.setItem('union:session', '{{{');
+    env().win.localStorage.setItem('tapll:session', '{{{');
     expect(UUID_RE.test(createState().touch())).toBe(true);
-    env().win.localStorage.setItem('union:session', JSON.stringify({ id: 5 }));
+    env().win.localStorage.setItem('tapll:session', JSON.stringify({ id: 5 }));
     expect(UUID_RE.test(createState().touch())).toBe(true);
   });
 
@@ -75,12 +75,12 @@ describe('createState (session rules, same as SessionManager.swift)', () => {
     expect(st.touch()).not.toBe(a);
   });
 
-  it('install id: UUID, stored in union:id, stable across instances, replaced if damaged', () => {
+  it('install id: UUID, stored in tapll:id, stable across instances, replaced if damaged', () => {
     const id = createState().installId();
     expect(UUID_RE.test(id)).toBe(true);
-    expect(env().win.localStorage.getItem('union:id')).toBe(id);
+    expect(env().win.localStorage.getItem('tapll:id')).toBe(id);
     expect(createState().installId()).toBe(id);
-    env().win.localStorage.setItem('union:id', 'garbage');
+    env().win.localStorage.setItem('tapll:id', 'garbage');
     const fresh = createState().installId();
     expect(UUID_RE.test(fresh)).toBe(true);
   });
@@ -136,7 +136,7 @@ describe('product_analytics through the API', () => {
     await api.flush();
     const b = env().fetched[0];
     expect(b.privacy_mode).toBe('product_analytics');
-    expect(b.identity).toEqual({ install_id: env().win.localStorage.getItem('union:id') });
+    expect(b.identity).toEqual({ install_id: env().win.localStorage.getItem('tapll:id') });
     const sessions = new Set(b.events.map((e: any) => e.session_id));
     expect(sessions.size).toBe(1);
     expect(b.events.every((e: any) => UUID_RE.test(e.session_id))).toBe(true);
@@ -167,13 +167,13 @@ describe('product_analytics through the API', () => {
     expect(env().events('x')[0].session_id).toBe(id);
   });
 
-  it('identify: user_id and traits join the identity and persist in union:user', async () => {
+  it('identify: user_id and traits join the identity and persist in tapll:user', async () => {
     const { api } = start(pa);
     api.identify('user_42', { plan: 'pro', name: 'Ada' });
     api.track('x');
     await api.flush();
     expect(env().fetched[0].identity).toMatchObject({ user_id: 'user_42', traits: { plan: 'pro', name: 'Ada' } });
-    expect(JSON.parse(env().win.localStorage.getItem('union:user')!)).toEqual({ id: 'user_42', traits: { plan: 'pro', name: 'Ada' } });
+    expect(JSON.parse(env().win.localStorage.getItem('tapll:user')!)).toEqual({ id: 'user_42', traits: { plan: 'pro', name: 'Ada' } });
     // a reload keeps the user
     const again = createApi(config(pa));
     again.api.track('y');
@@ -196,7 +196,7 @@ describe('product_analytics through the API', () => {
     api.identify('u', Object.fromEntries(Array.from({ length: 9 }, (_, i) => ['k' + i, 'v'])));
     await api.flush();
     expect(env().fetched[0].identity.user_id).toBeUndefined();
-    expect(env().win.localStorage.getItem('union:user')).toBeNull();
+    expect(env().win.localStorage.getItem('tapll:user')).toBeNull();
     expect(env().warn).toHaveBeenCalled();
   });
 
@@ -204,7 +204,7 @@ describe('product_analytics through the API', () => {
     const { api } = start(pa);
     api.identify('user_42', { plan: 'pro' });
     api.track('before');
-    const installId = env().win.localStorage.getItem('union:id') ?? api.sessionId() ?? '';
+    const installId = env().win.localStorage.getItem('tapll:id') ?? api.sessionId() ?? '';
     api.reset();
     api.track('after');
     await api.flush();
@@ -212,8 +212,8 @@ describe('product_analytics through the API', () => {
     expect(after.session_id).not.toBe(before.session_id);
     const last = env().fetched.at(-1);
     expect(last.identity.user_id).toBeUndefined();
-    expect(last.identity.install_id).toBe(env().win.localStorage.getItem('union:id'));
-    expect(env().win.localStorage.getItem('union:user')).toBeNull();
+    expect(last.identity.install_id).toBe(env().win.localStorage.getItem('tapll:id'));
+    expect(env().win.localStorage.getItem('tapll:user')).toBeNull();
     void installId;
   });
 });
