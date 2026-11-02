@@ -4,5 +4,10 @@
   "name": "tapll-cdn",
   "compatibility_date": "2025-08-01",
   "assets": { "directory": "./public", "not_found_handling": "none" },
-  "routes": [{ "pattern": "cdn.tapll.com", "custom_domain": true }]
+  // `cdn.useunion.dev` is the pre-rename host every Union-era snippet loads; it serves the same files
+  // (0.5.0 answers to both `window.tapll` and `window.union`) for at least 12 months (rebrand F6).
+  "routes": [
+    { "pattern": "cdn.tapll.com", "custom_domain": true },
+    { "pattern": "cdn.useunion.dev", "custom_domain": true }
+  ]
 }
