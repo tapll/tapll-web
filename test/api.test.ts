@@ -202,7 +202,7 @@ describe('command queue stub (window.tapll.q)', () => {
     await w.tapll.flush();
     expect(env().events().map((e) => e.name + '@' + e.screen)).toEqual(['$pageview@/app', 'early_one@/app', 'early_two@/app', '$page_leave@/app', '$pageview@/virtual', 'late_one@/app']);
     expect(env().events('early_two')[0]).toMatchObject({ feature: 'onboarding', role: 'start' });
-    expect(w.tapll.version).toBe('0.5.0');
+    expect(w.tapll.version).toBe('0.5.1');
   });
 
   it('command style keeps working after load: tapll("track", ...) and tapll("feature", key)', async () => {
@@ -235,7 +235,7 @@ describe('pre-rename compatibility (window.union)', () => {
     const w = env().win as any;
     boot(script());
     expect(w.union).toBe(w.tapll);
-    expect(w.union.version).toBe('0.5.0');
+    expect(w.union.version).toBe('0.5.1');
   });
 
   it('drains a queue left by the old snippet (union.q) and keeps union(...) working', async () => {

@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.5.1
+
+- **Automation flag widened**: `device.automation: true` is now also sent when the browser measurably lacks what a person's browser has — a window with no size and no `navigator.languages` (old headless Chrome), or a Chrome User-Agent without `window.chrome` (headless, or a script faking Chrome's UA). Android WebView (`; wv)`), which has no `window.chrome` either, is not flagged. Tapll keeps these visits and marks them as bots. Headless Chrome in its new mode with a spoofed User-Agent still passes.
+
 ## 0.5.0
 
 - **Rename Union -> Tapll.** Package `tapll-web`; CDN `cdn.tapll.com`, ingest `in.tapll.com` (default `data-api`); global `window.tapll`; log prefix `[tapll]`; banner element `tapll-consent`; tagged clicks `data-tapll-event` / `-feature` / `-role`; storage keys `tapll:*`; typings `Tapll` (`Union` kept as a deprecated type alias).

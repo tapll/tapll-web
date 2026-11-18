@@ -62,6 +62,37 @@ describe('every batch conforms to web-batch.v1.json', () => {
     expect(last.device.automation).toBe(true);
   });
 
+  it('automation: headless traits flag the batch; Chrome and Android WebView do not', async () => {
+    const nav = env().win.navigator;
+    const w = env().win as any;
+    const set = (o: any, k: string, value: unknown) => Object.defineProperty(o, k, { value, configurable: true });
+    const chromeUa = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36';
+    const flagged = async (): Promise<boolean> => {
+      const s = start({});
+      s.api.track('x');
+      await s.api.flush();
+      return env().fetched.at(-1).device.automation === true;
+    };
+
+    set(nav, 'userAgent', chromeUa);
+    set(w, 'chrome', {});
+    expect(await flagged()).toBe(false); // a real Chrome
+
+    set(w, 'chrome', undefined);
+    expect(await flagged()).toBe(true); // Chrome UA without window.chrome
+
+    set(nav, 'userAgent', 'Mozilla/5.0 (Linux; Android 14; Pixel 8; wv) AppleWebKit/537.36 (KHTML, like Gecko) Version/4.0 Chrome/140.0.0.0 Mobile Safari/537.36');
+    expect(await flagged()).toBe(false); // Android WebView has no window.chrome either
+
+    set(nav, 'languages', []);
+    expect(await flagged()).toBe(true);
+    set(nav, 'languages', ['en-US']);
+
+    set(w, 'outerWidth', 0);
+    set(w, 'outerHeight', 0);
+    expect(await flagged()).toBe(true);
+  });
+
   it('event order is chronological and ids are unique', async () => {
     const batches = await everything({});
     const evs = batches.flatMap((b) => b.events);

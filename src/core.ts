@@ -6,6 +6,25 @@ import { PATH_MAX } from './validation';
 import { VERSION } from './version';
 
 /** Builds events and batches and owns identity/session/opt-out state. Input is already validated by the API layer. */
+/**
+ * A browser driven by automation, from what it measurably lacks — never from behaviour. `webdriver`
+ * (Puppeteer, Playwright, Selenium, whatever UA they claim); a window with no size and no languages
+ * (old headless Chrome); a Chrome UA without `window.chrome` (headless, or a script faking Chrome's
+ * UA) — except Android WebView (`; wv)`), which has no `window.chrome` either.
+ * shortcut: `--headless=new` Chrome with a spoofed UA passes all of these; a further signal needs measuring first.
+ */
+export function automated(): boolean {
+  const n = navigator;
+  const w = window as Window & { chrome?: unknown };
+  const ua = n.userAgent || '';
+  return (
+    n.webdriver === true ||
+    (w.outerWidth === 0 && w.outerHeight === 0) ||
+    (!!n.languages && n.languages.length === 0) ||
+    (/Chrome\//.test(ua) && !/; wv\)/.test(ua) && !w.chrome)
+  );
+}
+
 export function createCore(cfg: Config) {
   const pa = cfg.mode === 'product_analytics';
   const st = pa ? createState() : null;
@@ -32,8 +51,8 @@ export function createCore(cfg: Config) {
     build(events, batch_id) {
       const device: Record<string, unknown> = { os_name: 'Web', sdk_version: VERSION, app_version: cfg.version, locale: (navigator.language || 'en').slice(0, 16), screen_width: Math.round(innerWidth) };
       device.timezone = (Intl.DateTimeFormat().resolvedOptions().timeZone || '').slice(0, 64);
-      // Puppeteer, Playwright and Selenium set it whatever User-Agent they claim; the server marks the visit a bot.
-      if (navigator.webdriver === true) device.automation = true;
+      // The server marks the visit a bot (never drops it); see `automated()`.
+      if (automated()) device.automation = true;
       const u = st && st.user();
       // JSON.stringify omits undefined, so absent keys are never sent (never null).
       const identity = st ? { install_id: st.installId(), user_id: u ? u.id : undefined, traits: u ? u.traits : undefined } : {};
